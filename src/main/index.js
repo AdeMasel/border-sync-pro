@@ -26,6 +26,9 @@ mainWindow = new BrowserWindow({
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173')
     mainWindow.webContents.openDevTools()
+      } else {
+    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
+  }
   } else {
     mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'))
   }

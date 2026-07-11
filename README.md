@@ -16,6 +16,21 @@ Professional LRC lyrics synchronization desktop app built with Electron.
 
 Download the latest release:
 
+### macOS Installation Issues
+
+If you get an error when opening the app on macOS, run this command in Terminal:
+
+```bash
+xattr -cr /Applications/Border\ Sync\ Pro.app
+```
+
+This removes the quarantine attribute that macOS adds to downloaded apps.
+
+Alternatively, you can:
+1. Right-click the app and select "Open"
+2. Click "Open" in the security dialog
+3. Or go to System Preferences > Security & Privacy and click "Open Anyway"
+
 - **macOS**: `.dmg` installer
 - **Windows**: `.exe` installer
 

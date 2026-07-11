@@ -4,17 +4,14 @@ const fs = require('fs')
 const log = require('electron-log')
 
 const isDev = process.env.NODE_ENV === 'development'
-const Store = require('electron-store')
-const store = new Store()
-
 let mainWindow
-
 function createWindow() {
-  mainWindow = new BrowserWindow({
+  
+mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 900,
-    minHeight: 600,
+    minHeight: 600,Height: 600,
     backgroundColor: '#0a0a0f',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     webPreferences: {

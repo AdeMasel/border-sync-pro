@@ -8,8 +8,8 @@
   "license": "MIT",
   "scripts": {
     "start": "electron .",
-    "dev": "vite src/renderer & wait-on http://localhost:5173 && electron .",
-    "build": "vite build src/renderer",
+    "dev": "vite & wait-on http://localhost:5173 && electron .",
+    "build": "vite build",
     "dist": "npm run build && electron-builder",
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:win": "npm run build && electron-builder --win",

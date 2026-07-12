@@ -2,8 +2,10 @@ const { app, BrowserWindow, ipcMain, dialog, Menu, shell, globalShortcut } = req
 const path = require('path')
 const fs = require('fs')
 const log = require('electron-log')
+const Store = require('electron-store')
 
 const isDev = process.env.NODE_ENV === 'development'
+const store = new Store()
 let mainWindow
 function createWindow() {
   
@@ -11,7 +13,7 @@ mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 900,
-    minHeight: 600,Height: 600,
+    minHeight: 600,
     backgroundColor: '#0a0a0f',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     webPreferences: {
@@ -26,6 +28,7 @@ mainWindow = new BrowserWindow({
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173')
     mainWindow.webContents.openDevTools()
+  } else {
     mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'))
   }
 

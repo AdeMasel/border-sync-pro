@@ -1,18 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useImmer } from 'use-immer'
+import { produce } from 'immer'
+
+const initialProject = {
+  title: '',
+  artist: '',
+  album: '',
+  lines: [{ time: null, text: '' }],
+  offset: 0,
+  metadata: {}
+}
 
 function App() {
-  const [project, updateProject] = useImmer({
-    title: '',
-    artist: '',
-    album: '',
-    lines: [{ time: null, text: '' }],
-    offset: 0,
-    metadata: {}
-  })
-  
-  const [history, setHistory] = useState([])
-  const [historyIndex, setHistoryIndex] = useState(-1)
+  const [project, updateProject] = useImmer(initialProject)
+
+  const [history, setHistory] = useState(() => [structuredClone(initialProject)])
+  const [historyIndex, setHistoryIndex] = useState(0)
   const [audioFile, setAudioFile] = useState(null)
   const [audioUrl, setAudioUrl] = useState('')
   const [youtubeUrl, setYoutubeUrl] = useState('')
@@ -28,24 +31,38 @@ function App() {
   const audioRef = useRef(null)
   const playerRef = useRef(null)
   
-  const saveToHistory = useCallback(() => {
-    const newHistory = history.slice(0, historyIndex + 1)
-    newHistory.push(JSON.parse(JSON.stringify(project)))
-    setHistory(newHistory)
-    setHistoryIndex(newHistory.length - 1)
-  }, [history, historyIndex, project])
-  
+  const historyIndexRef = useRef(0)
+  useEffect(() => { historyIndexRef.current = historyIndex }, [historyIndex])
+
+  // Push a snapshot of the *new* project state onto the history stack.
+  const saveToHistory = useCallback((snapshot) => {
+    setHistory(prev => {
+      const trimmed = prev.slice(0, historyIndexRef.current + 1)
+      return [...trimmed, structuredClone(snapshot)]
+    })
+    setHistoryIndex(i => i + 1)
+  }, [])
+
+  // Apply an immer recipe and record the resulting state for undo/redo.
+  const commit = useCallback((recipe) => {
+    const next = produce(project, recipe)
+    updateProject(() => next)
+    saveToHistory(next)
+  }, [project, updateProject, saveToHistory])
+
   const undo = useCallback(() => {
     if (historyIndex > 0) {
-      setHistoryIndex(historyIndex - 1)
-      updateProject(draft => Object.assign(draft, history[historyIndex - 1]))
+      const newIndex = historyIndex - 1
+      setHistoryIndex(newIndex)
+      updateProject(() => structuredClone(history[newIndex]))
     }
   }, [historyIndex, history, updateProject])
-  
+
   const redo = useCallback(() => {
     if (historyIndex < history.length - 1) {
-      setHistoryIndex(historyIndex + 1)
-      updateProject(draft => Object.assign(draft, history[historyIndex + 1]))
+      const newIndex = historyIndex + 1
+      setHistoryIndex(newIndex)
+      updateProject(() => structuredClone(history[newIndex]))
     }
   }, [historyIndex, history, updateProject])
 
@@ -56,7 +73,6 @@ function App() {
       setAudioFile(file)
       const url = URL.createObjectURL(file)
       setAudioUrl(url)
-      saveToHistory()
     }
   }
 
@@ -70,10 +86,9 @@ function App() {
   }
 
   const addLine = () => {
-    updateProject(draft => {
+    commit(draft => {
       draft.lines.push({ time: null, text: '' })
     })
-    saveToHistory()
   }
 
   const updateLine = (index, field, value) => {
@@ -83,10 +98,9 @@ function App() {
   }
 
   const deleteLine = (index) => {
-    updateProject(draft => {
+    commit(draft => {
       draft.lines.splice(index, 1)
     })
-    saveToHistory()
   }
 
   const handleExport = () => {
@@ -122,10 +136,9 @@ function App() {
           }
           return { time: null, text: line }
         })
-        updateProject(draft => {
+        commit(draft => {
           draft.lines = lines
         })
-        saveToHistory()
       }
       reader.readAsText(file)
     }
@@ -189,8 +202,9 @@ function App() {
   const setLineTime = (index) => {
     const audio = audioRef.current
     if (audio) {
-      updateLine(index, 'time', audio.currentTime)
-      saveToHistory()
+      commit(draft => {
+        draft.lines[index].time = audio.currentTime
+      })
     }
   }
 
@@ -301,7 +315,7 @@ function App() {
                   type="text"
                   value={line.text}
                   onChange={(e) => updateLine(index, 'text', e.target.value)}
-                  onBlur={() => saveToHistory()}
+                  onBlur={() => saveToHistory(project)}
                   className="flex-1 px-3 py-2 bg-gray-900/50 border border-gray-600 rounded focus:border-blue-500 focus:outline-none"
                   placeholder="Enter lyrics..."
                 />

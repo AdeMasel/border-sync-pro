@@ -64,8 +64,7 @@ const matchesShortcut = (event, shortcutKeys) => {
                    event.code.toLowerCase() === key.toLowerCase();
   
   return keyMatch &&
-         event.ctrlKey === ctrl &&
-         event.metaKey === ctrl &&
+         (event.ctrlKey || event.metaKey) === ctrl &&
          event.shiftKey === shift &&
          event.altKey === alt;
 };
@@ -115,9 +114,9 @@ export const getShortcutsByCategory = () => {
 // Format shortcut keys for display
 export const formatKeys = (keys) => {
   return keys
-    .replace('Ctrl', '⌘')
-    .replace('Shift', '⇧')
-    .replace('Alt', '⌥')
-    .replace('Arrow', '')
-    .replace('+', ' ');
+    .replace(/Ctrl/g, '⌘')
+    .replace(/Shift/g, '⇧')
+    .replace(/Alt/g, '⌥')
+    .replace(/Arrow/g, '')
+    .replace(/\+/g, ' ');
 };
